@@ -1,0 +1,35 @@
+# Project Overview
+I want to create a web app that allows users to record their voice and transcribe it into a journal entry.
+
+# Core Functionalities
+- User Authentication
+- Voice Recording and Transcription
+- Journal Entry Storage
+- User Interface
+- Time Blocking
+- Task Management
+- Progress Tracking
+- Analytics
+
+# Documentation
+Prisma is used to create the database.
+OpenAI is used to transcribe the audio.
+
+# Tech Stack
+- choose a tech stack that is popular and easy to learn
+
+# Error Fixing Process
+- Explain error in simple terms
+- explain the solution in simple terms
+- show how to fix the error
+
+# github push process 
+- stage the changes
+- commit the changes
+- push the changes
+
+# Comments
+- make sure to ALWAYS use comments in your code
+- do not delete comments unless they are no longer needed
+
+
