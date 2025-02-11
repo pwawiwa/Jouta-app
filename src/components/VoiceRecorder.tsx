@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Mic, Square, Loader2 } from "lucide-react";
+import { Mic, Square, Calendar } from "lucide-react";
 import { Task } from "@prisma/client";
+import { format, addDays } from "date-fns";
 
 interface VoiceRecorderProps {
   onTasksCreated: (tasks: Task[]) => void;
@@ -20,6 +21,7 @@ export function VoiceRecorder({
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [chunks, setChunks] = useState<BlobPart[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [targetDate, setTargetDate] = useState(new Date());
 
   // Initialize recorder
   useEffect(() => {
@@ -55,6 +57,7 @@ export function VoiceRecorder({
         }
       } catch (error) {
         console.error("Error initializing recorder:", error);
+        setError("Please allow microphone access to record");
       }
     };
 
@@ -76,6 +79,8 @@ export function VoiceRecorder({
       setChunks([]); // Clear any existing chunks
       mediaRecorder.start(1000); // Record in 1-second chunks
       setIsRecording(true);
+      // Reset target date to today when starting new recording
+      setTargetDate(new Date());
     }
   }, [mediaRecorder, isSubmitting, isProcessing]);
 
@@ -112,6 +117,7 @@ export function VoiceRecorder({
       const formData = new FormData();
       formData.append("audio", audioBlob);
       formData.append("language", language);
+      formData.append("targetDate", targetDate.toISOString());
 
       const response = await fetch("/api/tasks", {
         method: "POST",
@@ -131,6 +137,21 @@ export function VoiceRecorder({
     }
   };
 
+  const getButtonLabel = () => {
+    const isToday = targetDate.toDateString() === new Date().toDateString();
+    const isTomorrow = targetDate.toDateString() === addDays(new Date(), 1).toDateString();
+    
+    if (language === "en") {
+      return isToday ? "Record for Today" : 
+             isTomorrow ? "Record for Tomorrow" :
+             `Record for ${format(targetDate, "MMM d")}`;
+    } else {
+      return isToday ? "Rekam untuk Hari Ini" :
+             isTomorrow ? "Rekam untuk Besok" :
+             `Rekam untuk ${format(targetDate, "d MMM")}`;
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center space-y-4 p-4">
       {error && (
@@ -138,17 +159,20 @@ export function VoiceRecorder({
           <p className="text-sm">{error}</p>
         </div>
       )}
-      <div className="flex flex-col items-center space-y-2">
+      <div className="flex flex-col items-center space-y-4">
+        <div className="text-sm font-medium text-white/80">
+          {getButtonLabel()}
+        </div>
         {isRecording ? (
           <>
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500 shadow-lg transition-all hover:bg-red-600">
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-red-500 shadow-lg transition-all hover:bg-red-600 group">
               <button
                 onClick={stopRecording}
-                className="h-8 w-8 rounded-full bg-white"
+                className="h-12 w-12 rounded-full bg-white group-hover:scale-95 transition-all"
                 aria-label="Stop recording"
               />
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-white/60">
               {language === "en" ? "Press space or click to stop" : "Tekan spasi atau klik untuk berhenti"}
             </p>
           </>
@@ -156,12 +180,15 @@ export function VoiceRecorder({
           <>
             <button
               onClick={startRecording}
-              className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-500 shadow-lg transition-all hover:bg-blue-600"
+              className="group relative flex h-24 w-24 items-center justify-center rounded-full bg-blue-500 shadow-lg transition-all hover:bg-blue-600"
               aria-label="Start recording"
             >
-              <div className="h-8 w-8 rounded-full bg-white" />
+              <div className="absolute inset-0 rounded-full bg-blue-400/20 animate-ping" />
+              <div className="relative flex items-center justify-center h-12 w-12 rounded-full bg-white group-hover:scale-95 transition-all">
+                <Mic className="h-6 w-6 text-blue-500" />
+              </div>
             </button>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-white/60">
               {language === "en" ? "Press space or click to start" : "Tekan spasi atau klik untuk mulai"}
             </p>
           </>
